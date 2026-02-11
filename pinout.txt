@@ -1,0 +1,24 @@
+Thorlabs PDX4/M Stepper + LCD1602 Pinout (Arduino Uno)
+
+Component              Uno Pin    LCD Pin    Note
+---------------------  ---------  ---------  -----------------------------
+Stepper STEP           9          —          TMC2208 STEP
+Stepper DIR            10         —          TMC2208 DIR
+Stepper EN             8          —          TMC2208 EN (LOW = enabled)
+Forward button (+)     6          —          INPUT_PULLUP, pressed = LOW
+Backward button (−)    7          —          INPUT_PULLUP
+Home button            5          —          INPUT_PULLUP
+Forward limit switch   12         —          INPUT_PULLUP, hit = LOW
+Backward limit switch  13         —          INPUT_PULLUP, hit = LOW
+LCD RS                 11         4          Register Select
+LCD Enable (E)         A0         6          Enable
+LCD DB4                A1         11         Data 4
+LCD DB5                A2         12         Data 5
+LCD DB6                A3         13         Data 6
+LCD DB7                A4         14         Data 7
+LCD RW                 —          5          MUST connect to GND
+LCD VO (contrast)      —          3          GND (or 10k pot middle)
+LCD VSS                —          1          GND
+LCD VDD                —          2          5V
+LCD A (backlight +)    —          15         5V (optional)
+LCD K (backlight -)    —          16         GND (optional)

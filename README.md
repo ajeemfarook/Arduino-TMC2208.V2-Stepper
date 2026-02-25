@@ -25,14 +25,14 @@ Features:
 
 | Function              | Leonardo Pin | LCD Pin | Description                              |
 |-----------------------|--------------|---------|------------------------------------------|
-| STEP                  | 9            | —       | TMC2208 STEP                             |
-| DIR                   | 10           | —       | TMC2208 DIR                              |
-| EN                    | 8            | —       | TMC2208 EN (active LOW)                  |
-| Forward button        | 6            | —       | INPUT_PULLUP, pressed = LOW              |
-| Backward button       | 7            | —       | INPUT_PULLUP                             |
-| Home button           | 5            | —       | INPUT_PULLUP                             |
-| Forward limit switch  | 12           | —       | INPUT_PULLUP, hit = LOW                  |
-| Backward limit switch | 13           | —       | INPUT_PULLUP, hit = LOW                  |
+| STEP                  | 12            | —       | TMC2208 STEP                             |
+| DIR                   | 11           | —       | TMC2208 DIR                              |
+| EN                    | 13            | —       | TMC2208 EN (active LOW)                  |
+| Forward button        | A3            | —       | INPUT_PULLUP, pressed = LOW              |
+| Backward button       | A4            | —       | INPUT_PULLUP                             |
+| Home button           | lcd sheil            | —       | INPUT_PULLUP                             |
+| Forward limit switch  | A4           | —       | INPUT_PULLUP, hit = LOW                  |
+| Backward limit switch | A5           | —       | INPUT_PULLUP, hit = LOW                  |
 | LCD RS                | 11           | 4       | Register Select                          |
 | LCD Enable (E)        | A0           | 6       | Enable                                   |
 | LCD DB4               | A1           | 11      | Data 4                                   |

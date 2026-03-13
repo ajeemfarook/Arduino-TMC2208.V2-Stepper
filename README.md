@@ -1,72 +1,174 @@
-# Thorlabs PDX4/M Linear Stage Stepper Control with LCD
+# Camera Slider Controller
 
-Arduino Leonardo (or Uno compatible) project to control a Thorlabs PDX4/M (or similar) linear stage using TMC2208 stepper driver.
+Arduino-based motorised camera slider with web serial control, automatic rail calibration, and LCD keypad interface.
 
-Features:
-- Two buttons: forward (+) and backward (−) — hold for continuous move, tap for 0.5 cm step
-- Home button — returns to 0 cm using backward limit switch
-- Two limit switches (forward & backward)
-- LCD1602 16×2 display showing current position (cm), percentage, and status
-- Automatic homing at startup
-- Position tracking with software limits
+---
 
-## Hardware Requirements
+## Hardware
 
-- Arduino Leonardo (or Uno)
-- TMC2208 stepper driver
-- NEMA17 stepper motor (or compatible with your stage)
-- 3 × momentary push buttons (forward, backward, home)
-- 2 × limit switches (normally open)
-- LCD1602 (parallel 4-bit mode, no I2C backpack)
-- 10kΩ potentiometer (recommended for contrast) or fixed resistor/GND trick
-- Power supply for motor (12–24 V depending on TMC2208)
+| Part | Spec |
+|---|---|
+| MCU | Arduino Uno / Mega |
+| Driver | TMC2208 v2 — standalone STEP/DIR/EN mode |
+| Motor | Creality 42-34 NEMA17 (0.8 A, 0.4 N·m) |
+| Belt | GT2, 21-tooth pulley |
+| Microstepping | 8x — MS1=LOW, MS2=LOW |
+| Steps/cm | 380.952 (auto-calculated from belt/pulley math) |
+| Rail | 25 cm (A5 switch) → 140 cm (A4 switch) |
+| LCD | DFRobot LCD Keypad Shield (16×2) |
 
-## Pin Connections
+---
 
-| Function              | Leonardo Pin | LCD Pin | Description                              |
-|-----------------------|--------------|---------|------------------------------------------|
-| STEP                  | 12            | —       | TMC2208 STEP                             |
-| DIR                   | 11           | —       | TMC2208 DIR                              |
-| EN                    | 13            | —       | TMC2208 EN (active LOW)                  |
-| Forward button        | A3            | —       | INPUT_PULLUP, pressed = LOW              |
-| Backward button       | A4            | —       | INPUT_PULLUP                             |
-| Home button           | lcd sheil            | —       | INPUT_PULLUP                             |
-| Forward limit switch  | A4           | —       | INPUT_PULLUP, hit = LOW                  |
-| Backward limit switch | A5           | —       | INPUT_PULLUP, hit = LOW                  |
-| LCD RS                | 11           | 4       | Register Select                          |
-| LCD Enable (E)        | A0           | 6       | Enable                                   |
-| LCD DB4               | A1           | 11      | Data 4                                   |
-| LCD DB5               | A2           | 12      | Data 5                                   |
-| LCD DB6               | A3           | 13      | Data 6                                   |
-| LCD DB7               | A4           | 14      | Data 7                                   |
-| LCD RW                | —            | 5       | Must connect to GND                      |
-| LCD VSS               | —            | 1       | GND                                      |
-| LCD VDD               | —            | 2       | 5V                                       |
-| LCD VO (contrast)     | —            | 3       | GND (or 10k pot middle)                  |
-| LCD A (backlight +)   | —            | 15      | 5V                                       |
-| LCD K (backlight -)   | —            | 16      | GND                                      |
+## Wiring
 
-**Note**: If text is invisible or only black squares appear, try connecting LCD pin 3 (VO) to 5V instead of GND.
+```
+Arduino   →   TMC2208
+D12       →   STEP
+D13       →   DIR
+D11       →   EN          (active LOW)
 
-## Calibration
+Arduino   →   Limits
+A5        →   LIMIT_MIN   (25 cm / motor end)   active LOW, internal pull-up
+A4        →   LIMIT_HOME  (140 cm / home end)   active LOW, internal pull-up
 
-Current settings:
-- 200 steps = 0.5 cm → 400 steps/cm
-- Each tap moves 0.5 cm
-- Adjust `STEPS_PER_CM` and `STEPS_PER_TAP` if your stage moves differently
+Arduino   →   Jog buttons
+A1        →   BTN_FORWARD   (toward 25 cm)      active LOW, internal pull-up
+A2        →   BTN_BACKWARD  (toward 140 cm)     active LOW, internal pull-up
+```
 
-## How to use
+TMC2208 MS1 and MS2 pins must both be tied LOW for 8x microstepping.
 
-1. Power on → automatic homing to 0 cm
-2. Hold forward/backward button → continuous move
-3. Tap forward/backward → move 0.5 cm
-4. Press home button → return to 0 cm
-5. LCD shows:  
-   Line 1: `Pos: 12.5 cm`  
-   Line 2: `11%  >> Forward` (or Idle / Homing...)
+---
 
-## License
+## File Structure
 
-MIT License – feel free to modify and share.
+```
+CameraSlider/
+├── Slider.ino      — main sketch
+├── calib.h         — all tunable parameters (edit this first)
+├── config.h        — pin map (edit if you re-wire)
+├── WebSerial.h     — header-only web serial bridge
+└── README.md
+```
 
-Made for Thorlabs PDX4/M stage automation.
+**Only `calib.h` needs editing for most changes** — speeds, presets, rail geometry, switch offset.
+
+---
+
+## Coordinate System
+
+```
+[MOTOR / A5 end] ────────────────────────── [A4 end / HOME]
+      25 cm                                      140 cm
+   (LIMIT_MIN)                               (LIMIT_HOME)
+   DIR HIGH = forward →                ← backward = DIR LOW
+   position decreases                     position increases
+```
+
+---
+
+## Boot Sequence
+
+1. Power on → LCD shows **"Waiting serial.."** — motor stays off, nothing moves
+2. Open web page or Serial monitor → Serial connects
+3. LCD shows **"Calibrating..."** → rail sweep begins automatically
+4. Carriage drives to A5 (25 cm), backs off
+5. Carriage drives to A4 (140 cm), counts steps, measures real span
+6. Runtime limits `railMinCM` / `railMaxCM` are set from belt math — no tape measure needed
+7. LCD shows **"Ready"** → web page receives `READY` + `POS:140.0`
+
+Calibration runs **once per power cycle**, triggered by the first Serial connection. The carriage will not move before that.
+
+---
+
+## LCD Keypad Buttons
+
+| Button | Action |
+|---|---|
+| RIGHT | Go home (smooth move to 140 cm, then switch-lock) |
+| UP | Move to preset A (45 cm) |
+| DOWN | Move to preset B (58 cm) |
+| LEFT | Move to preset C (81 cm) |
+| SELECT | Move to preset D (125 cm) |
+
+During any preset move, **RIGHT = abort** → re-homes automatically.
+
+Jog buttons (A1 / A2): hold to jog, release triggers a short tap nudge.
+
+---
+
+## Web Serial Commands
+
+| Command | Description |
+|---|---|
+| `HOME` | Home to A4 switch |
+| `GOTO <cm>` | Move to position in cm (e.g. `GOTO 75.5`) |
+| `JOG_FWD` | Jog one increment toward A5 |
+| `JOG_BWD` | Jog one increment toward A4 |
+| `JOG_STOP` | Confirm position after jog |
+| `STATUS` | Request current position |
+| `ESTOP` | Emergency stop — disables motor immediately |
+| `ESTOP_CLEAR` | Re-arm after estop |
+
+Responses:
+
+| Response | Meaning |
+|---|---|
+| `POS:<cm>` | Current confirmed position |
+| `READY` | System armed / estop cleared |
+| `ESTOP` | Estop triggered |
+| `WARN:<text>` | Rejected command or boundary violation |
+| `#<text>` | Debug line — ignored by web parser |
+
+Baud rate: **115200**. All commands newline-terminated.
+
+---
+
+## Calibration Tuning (`calib.h`)
+
+### Steps/cm — automatically calculated
+```cpp
+// Change any of these and STEPS_PER_CM updates automatically
+#define MOTOR_STEPS_PER_REV   200    // 1.8° motor
+#define BELT_TEETH            21     // pulley tooth count
+#define BELT_PITCH_MM         2.0f   // GT2 = 2 mm
+#define MICROSTEPS            8      // must match MS1/MS2 pin state
+```
+
+### A5 switch offset — if position reads slightly wrong at the motor end
+```cpp
+#define MIN_SWITCH_OFFSET_CM  0.0f   // positive = reads too high, negative = reads too low
+```
+**How to measure:** after calibration, jog to the A5 switch body, read the LCD. Set `deficit = LCD_reading − 25.0`.
+
+### Speed tuning
+```cpp
+#define SPEED_CAL_US     1500   // calibration sweep (higher = slower)
+#define SPEED_HOME_US     800   // RIGHT button homing
+#define SPEED_JOG_US      300   // hold-jog
+#define SPEED_TAP_US      600   // tap nudge after jog release
+#define SPEED_TRAVEL_US   250   // preset moves
+```
+
+### Preset positions
+```cpp
+#define PRESET_A   45.0f   // UP
+#define PRESET_B   58.0f   // DOWN
+#define PRESET_C   81.0f   // LEFT
+#define PRESET_D  125.0f   // SELECT
+```
+
+---
+
+## Libraries Required
+
+No extra libraries needed. Only the Arduino built-in `LiquidCrystal` is used.
+
+---
+
+## Notes
+
+- Motor auto-disables after 5 s idle to prevent heat buildup (42-34 runs warm at 0.8 A)
+- ESTOP from web disables motor mid-move and reports last known position
+- Serial monitor and web page can be used interchangeably — same protocol
+- If the A4 switch never triggers during calibration (broken wire, bad switch), the system falls back to nominal limits (25–140 cm) and shows `CAL ERROR` on the LCD

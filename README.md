@@ -1,4 +1,4 @@
-# Camera Slider Controller
+# Slider Controller
 
 Arduino-based motorised camera slider with web serial control, automatic rail calibration, and LCD keypad interface.
 

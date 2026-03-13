@@ -170,5 +170,5 @@ No extra libraries needed. Only the Arduino built-in `LiquidCrystal` is used.
 
 - Motor auto-disables after 5 s idle to prevent heat buildup (42-34 runs warm at 0.8 A)
 - ESTOP from web disables motor mid-move and reports last known position
-- Serial monitor and web page can be used interchangeably — same protocol
+- Serial monitor and web page can be used interchangeably same protocol
 - If the A4 switch never triggers during calibration (broken wire, bad switch), the system falls back to nominal limits (25–140 cm) and shows `CAL ERROR` on the LCD

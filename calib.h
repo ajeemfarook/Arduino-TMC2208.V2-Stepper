@@ -1,7 +1,7 @@
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║              calib.h  —  CALIBRATION FILE                       ║
 // ║  Creality 42-34  +  TMC2208 v2 standalone                        ║
-// ║  MS1=0  MS2=0  →  8x microstep  |  21-tooth GT2 belt            ║
+// ║  MS1=0  MS2=0  →  8x microstep  |  20-tooth GT2 belt            ║
 // ╚══════════════════════════════════════════════════════════════════╝
 
 #pragma once
@@ -19,7 +19,7 @@
 //  Steps/cm = (200 × 8) / (21 × 2mm / 10) = 1600 / 4.2 = 380.952
 // ────────────────────────────────────────────────────────────────────
 #define MOTOR_STEPS_PER_REV   200
-#define BELT_TEETH            21
+#define BELT_TEETH            20
 #define BELT_PITCH_MM         2.0f
 #define MICROSTEPS            8          // MS1=0 MS2=0
 
@@ -33,7 +33,7 @@
 //  Physical layout:
 //
 //    [MOTOR / A5 end]──────────────────────────[A4 end / HOME]
-//              25 cm                                140 cm
+//              28.7 cm                                134.5 cm
 //              (A5 switch)                          (A4 switch)
 //
 //  A5 (LIMIT_MIN)  = forward  end ← closest to motor
@@ -58,8 +58,8 @@
 //    railMaxCM = NOMINAL_MIN_CM + span_cm        (A4 derived from span)
 //
 // ── NOMINAL VALUES (reference / sanity bounds only) ─────────────────
-#define NOMINAL_MIN_CM      25.0f   // expected A5 switch position
-#define NOMINAL_MAX_CM     140.0f   // expected A4 switch position
+#define NOMINAL_MIN_CM      28.7f   // expected A5 switch position
+#define NOMINAL_MAX_CM     134.5f   // expected A4 switch position
 #define NOMINAL_SPAN_CM    (NOMINAL_MAX_CM - NOMINAL_MIN_CM)  // 115 cm
 
 // ── RUNTIME LIMITS (set by calibrateRail(), used everywhere else) ────
@@ -85,13 +85,13 @@ extern float railHomeCM;   // = railMaxCM (carriage parks here)
 
 #define BACKOFF_CM          0.5f    // retract from switch after trigger
 #define TAP_DISTANCE_CM     0.5f    // nudge after jog release
-#define HOME_NEAR_CM        1.0f    // within this → full re-home on RIGHT
+#define HOME_NEAR_CM        0.5f    // within this → full re-home on RIGHT
 
 // ── CALIBRATION SANITY TOLERANCE ────────────────────────────────────
 //  calibrateRail() warns on Serial if the measured span differs from
 //  NOMINAL_SPAN_CM by more than this. Non-fatal — measured value
 //  is still used even if the warning fires.
-#define CAL_TOLERANCE_CM    1.0f    // acceptable ± error in cm
+#define CAL_TOLERANCE_CM    1.5f    // acceptable ± error in cm
 
 // ── CALIBRATION SAFETY TIMEOUT ──────────────────────────────────────
 //  Max steps to drive before giving up if a switch never triggers.
@@ -99,15 +99,15 @@ extern float railHomeCM;   // = railMaxCM (carriage parks here)
 #define CAL_MAX_STEPS  (long)((NOMINAL_SPAN_CM * 1.3f) * STEPS_PER_CM)
 
 // ── SPEED (half-period µs — HIGHER = SLOWER) ────────────────────────
-#define SPEED_CAL_US     1500    // slow sweep during startup calibration
-#define SPEED_HOME_US     800    // homing (RIGHT button)
+#define SPEED_CAL_US      300    // slow sweep during startup calibration
+#define SPEED_HOME_US     600    // homing (RIGHT button)
 #define SPEED_JOG_US      300    // hold-jog buttons
 #define SPEED_TAP_US      600    // tap nudge after jog release
 #define SPEED_TRAVEL_US   250    // preset moves
 
 // ── SOFT-START RAMP ─────────────────────────────────────────────────
 #define RAMP_START_US    2000    // slow end of ramp (half-period)
-#define RAMP_STEPS        600    // steps to reach full speed
+#define RAMP_STEPS        500    // steps to reach full speed
 
 // ── IDLE AUTO-DISABLE ───────────────────────────────────────────────
 #define IDLE_TIMEOUT_MS   5000   // ms idle before motor de-energises
@@ -116,4 +116,4 @@ extern float railHomeCM;   // = railMaxCM (carriage parks here)
 #define PRESET_A   45.0f   // UP     button
 #define PRESET_B   58.0f   // DOWN   button
 #define PRESET_C   81.0f   // LEFT   button
-#define PRESET_D  125.0f   // SELECT button
+#define PRESET_D  130.0f   // SELECT button

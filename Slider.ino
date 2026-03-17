@@ -243,7 +243,7 @@ void calibrateRail() {
     stepOnce(SPEED_CAL_US);
     if (checkEstopSerial()) return;
   }
-  WS_DBG("CAL: A5 hit (motor end, 25cm)");
+  WS_DBG("CAL: A5 hit (motor end, 28.7cm)");
   lcd.setCursor(0, 1); lcd.print("A5 hit!         ");
   delay(300);
 
@@ -635,7 +635,7 @@ void loop() {
       case 1: moveToPreset(PRESET_A, "45cm");  break;  // UP
       case 2: moveToPreset(PRESET_B, "58cm");  break;  // DOWN
       case 3: moveToPreset(PRESET_C, "81cm");  break;  // LEFT
-      case 4: moveToPreset(PRESET_D, "125cm"); break;  // SELECT
+      case 4: moveToPreset(PRESET_D, "130cm"); break;  // SELECT
     }
     fwd = (digitalRead(BTN_FORWARD)  == LOW);
     bwd = (digitalRead(BTN_BACKWARD) == LOW);
